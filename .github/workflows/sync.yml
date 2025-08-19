@@ -1,0 +1,30 @@
+name: Sync Fork with Upstream
+
+on:
+  schedule:
+    - cron: '0 */6 * * *'  # roda a cada 6 horas, ajuste conforme quiser
+  workflow_dispatch: {}   # permite executar manualmente no GitHub
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout fork
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # necessário para poder sincronizar histórico completo
+
+      - name: Configure upstream remote
+        run: |
+          git remote add upstream https://github.com/makccr/wallpapers.git
+          git fetch upstream
+
+      - name: Merge upstream/master
+        run: |
+          git checkout master
+          git merge upstream/master --allow-unrelated-histories -m "chore: sync with upstream wallpapers"
+
+      - name: Push changes
+        uses: ad-m/github-push-action@v0.6.0
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
