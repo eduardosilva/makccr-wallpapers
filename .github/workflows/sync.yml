@@ -2,8 +2,8 @@ name: Sync Fork with Upstream
 
 on:
   schedule:
-    - cron: '0 */6 * * *'  # roda a cada 6 horas (UTC)
-  workflow_dispatch: {}   # permite rodar manualmente
+    - cron: '0 */6 * * *'   # every 6 hours (UTC)
+  workflow_dispatch: {}
 
 jobs:
   sync:
@@ -19,15 +19,21 @@ jobs:
           git remote add upstream https://github.com/makccr/wallpapers.git
           git fetch upstream
 
-      - name: Configure Git
+      - name: Configure Git identity
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
 
-      - name: Merge upstream/master
+      - name: Merge upstream/master preferring ours
         run: |
+          set -e
           git checkout master
-          git merge upstream/master --strategy-option=ours -m "chore: sync with upstream wallpapers"
+          git merge upstream/master -m "chore: sync with upstream wallpapers" -X ours || (
+            echo "Conflicts detected; resolving in favor of ours..."
+            git checkout --ours .
+            git add -A
+            git commit -m "chore: sync with upstream wallpapers (resolved conflicts preferring ours)"
+          )
 
       - name: Push changes
         uses: ad-m/github-push-action@v0.6.0
