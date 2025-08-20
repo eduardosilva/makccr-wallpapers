@@ -27,7 +27,7 @@ jobs:
       - name: Merge upstream/master
         run: |
           git checkout master
-          git merge upstream/master --allow-unrelated-histories -m "chore: sync with upstream wallpapers"
+          git merge upstream/master --strategy-option=ours -m "chore: sync with upstream wallpapers"
 
       - name: Push changes
         uses: ad-m/github-push-action@v0.6.0
