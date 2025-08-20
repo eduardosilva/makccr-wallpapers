@@ -24,16 +24,17 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
 
-      - name: Merge upstream/master preferring ours
+      - name: Merge upstream/master preferring deletions
         run: |
           set -e
           git checkout master
-          git merge upstream/master -m "chore: sync with upstream wallpapers" -X ours || (
-            echo "Conflicts detected; resolving in favor of ours..."
-            git checkout --ours .
-            git add -A
-            git commit -m "chore: sync with upstream wallpapers (resolved conflicts preferring ours)"
-          )
+          if ! git merge upstream/master -m "chore: sync with upstream wallpapers"; then
+            echo "Conflicts detected; removing conflicted files (ours = deletion priority)..."
+            git status --porcelain | grep '^UU ' | awk '{print $2}' | xargs -r git rm -f
+            git status --porcelain | grep '^UD ' | awk '{print $2}' | xargs -r git rm -f
+            git status --porcelain | grep '^DU ' | awk '{print $2}' | xargs -r git rm -f
+            git commit -m "chore: sync with upstream wallpapers (conflicts resolved: keep ours/deletions)"
+          fi
 
       - name: Push changes
         uses: ad-m/github-push-action@v0.6.0
