@@ -2,8 +2,8 @@ name: Sync Fork with Upstream
 
 on:
   schedule:
-    - cron: '0 */6 * * *'  # roda a cada 6 horas, ajuste conforme quiser
-  workflow_dispatch: {}   # permite executar manualmente no GitHub
+    - cron: '0 */6 * * *'  # roda a cada 6 horas (UTC)
+  workflow_dispatch: {}   # permite rodar manualmente
 
 jobs:
   sync:
@@ -12,12 +12,17 @@ jobs:
       - name: Checkout fork
         uses: actions/checkout@v4
         with:
-          fetch-depth: 0  # necessário para poder sincronizar histórico completo
+          fetch-depth: 0
 
       - name: Configure upstream remote
         run: |
           git remote add upstream https://github.com/makccr/wallpapers.git
           git fetch upstream
+
+      - name: Configure Git
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
 
       - name: Merge upstream/master
         run: |
